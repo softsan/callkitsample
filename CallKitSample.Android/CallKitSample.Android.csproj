@@ -89,7 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CallKitSample\CallKitSample.csproj">
-      <Project>{970F9B49-6CA6-49EB-AB80-9694E829BCF4}</Project>
+      <Project>{4E31352E-43B9-4FB5-A393-1534256F2996}</Project>
       <Name>CallKitSample</Name>
     </ProjectReference>
   </ItemGroup>
