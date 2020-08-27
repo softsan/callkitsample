@@ -137,6 +137,7 @@ namespace CallKitSample.iOS.Twilio
 
         public void AcceptCallInvite()
         {
+            if (CallInvite == null) return;
             LogHelper.Call(nameof(TwilioVoiceHelper), nameof(AcceptCallInvite));
             try
             {
@@ -144,7 +145,7 @@ namespace CallKitSample.iOS.Twilio
                 var options = TVOAcceptOptions.OptionsWithCallInvite(CallInvite,
                                 (TVOAcceptOptionsBuilder arg0) =>
                                 {
-                                    arg0.SetUuid(CallInvite.GetUuid());
+                                    arg0.SetUuid(CallInvite.GetUuid());//activeCallUuid); // 
                                 });
 
                 Call = CallInvite?.AcceptWithOptions(options, _callDelegate);

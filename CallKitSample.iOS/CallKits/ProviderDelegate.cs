@@ -216,7 +216,7 @@ namespace CallKitSample.CallKits
                 {
                     // Yes, report to call manager
                     CallManager.Calls.Add(new ActiveCall(uuid, handle, false));
-                    iOS.AppDelegate.Instance.complete();
+                    //iOS.AppDelegate.Instance.complete();
                 }
                 else
                 {

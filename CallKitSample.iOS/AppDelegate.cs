@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using AVFoundation;
 using CallKitSample.CallKits;
 using CallKitSample.iOS.Twilio;
 using CoreFoundation;
@@ -49,54 +52,42 @@ namespace CallKitSample.iOS
         public void DidReceiveIncomingPush(PKPushRegistry registry, PKPushPayload payload, string type)
         {
             Console.WriteLine("My push is coming!");
-            // var aps = payload.DictionaryPayload.ObjectForKey(new NSString("callerID"));
-            var callerid = payload.DictionaryPayload["twi_from"].ToString();
-            //CallProviderDelegate.ReportIncomingCall(new NSUuid(), callerid);
-            TwilioService.Setnotification(payload);
+            if (payload != null)
+            {
+                TwilioService.Setnotification(payload);
+            }
         }
 
         [Export("pushRegistry:didReceiveIncomingPushWithPayload:forType:withCompletionHandler:")]
-        [Preserve(Conditional = true)]
         public void DidReceiveIncomingPush(PKPushRegistry registry, PKPushPayload payload, string type,Action completion)
         {
             try
             {
-                Console.WriteLine("My push is coming (Inside Action method!");
+                LoggerService.Log("Info", "My push is coming(Inside Action method!");
+             
                 var callerid = payload.DictionaryPayload["twi_from"].ToString();
-                Console.WriteLine($"from: {callerid}");
-                
+                LoggerService.Log("Info",$"from: {callerid}");
+
+                // Tried this but it didn't work
+                TwilioVoiceHelper.activeCallUuid = new NSUuid();
+                LoggerService.Log("Info", "CallUUID:" + TwilioVoiceHelper.activeCallUuid);
+
+                SetAudio();
+                CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
                 
                 if (payload != null)
                 {
-
                     TwilioService.Setnotification(payload);
                     //TwilioVoiceHelper.activeCallUuid = new NSUuid();
-                    //CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
+                    // CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
 
                 }
-                completion();
-
-                //DispatchQueue.GetGlobalQueue(DispatchQueuePriority.Default).DispatchAsync(() =>
-                //{
-                //    DispatchQueue.MainQueue.DispatchAsync(() =>
-                //    {
-                //        completion();
-                //    });
-                //});
-
+                completion(); 
             }
             catch (Exception ex)
             {
                 LogHelper.Info($"Inside DidReceiveIncomingPush:: Error:: {ex.Message} {ex.StackTrace}");
             }
-        }
-
-        void RegisterVoip()
-        {
-            var mainQueue = DispatchQueue.MainQueue;
-            PKPushRegistry voipRegistry = new PKPushRegistry(mainQueue);
-            voipRegistry.Delegate = this;  
-            voipRegistry.DesiredPushTypes = new NSSet(new string[] { PushKit.PKPushType.Voip });
         }
 
         public override bool OpenUrl(UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
@@ -114,40 +105,61 @@ namespace CallKitSample.iOS
 
             return base.OpenUrl(application, url, sourceApplication, annotation);
         }
-        
+
+        void RegisterVoip()
+        {
+            var mainQueue = DispatchQueue.MainQueue;
+            PKPushRegistry voipRegistry = new PKPushRegistry(mainQueue);
+            voipRegistry.Delegate = this;
+            voipRegistry.DesiredPushTypes = new NSSet(new string[] { PushKit.PKPushType.Voip });
+        }
+
+        void SetAudio()
+        {
+            try
+            {
+                NSError error = AVAudioSession.SharedInstance().SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionCategoryOptions.DefaultToSpeaker);
+
+                if (error == null)
+                {
+                    if (AVAudioSession.SharedInstance().SetMode(AVAudioSession.ModeVoiceChat, out error))
+                    {
+                        if (AVAudioSession.SharedInstance().OverrideOutputAudioPort(AVAudioSessionPortOverride.Speaker, out error))
+                        {
+                            error = AVAudioSession.SharedInstance().SetActive(true);
+                            if (error != null)
+                                LoggerService.Log("Error", error.Description);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Log("Error", $"Inside SetAudio:: Error:: {ex.Message} {ex.StackTrace}");
+            }
+        }
     }
 
 
-    public class PushRegistry : PKPushRegistryDelegate
+    public static class LoggerService
     {
-        public override void DidReceiveIncomingPush(PKPushRegistry registry, PKPushPayload payload, string type, Action completion)
+        public static void Log(string type,string message)
         {
-            Console.WriteLine("My push is coming!");
-            // var aps = payload.DictionaryPayload.ObjectForKey(new NSString("callerID"));
-            var callerid = payload.DictionaryPayload["twi_from"].ToString();
-            Console.WriteLine($"from: {callerid}");
-            // CallProviderDelegate.ReportIncomingCall(new NSUuid(), callerid);
-            TwilioService.Setnotification(payload);
-            completion();
-        }
-
-        public override void DidReceiveIncomingPush(PKPushRegistry registry, PKPushPayload payload, string type)
-        {
-            Console.WriteLine("My push is coming!");
-            var callerid = payload.DictionaryPayload["twi_from"].ToString();
-            Console.WriteLine($"from: {callerid}");
-            TwilioService.Setnotification(payload);
-        }
-
-        public override async void DidUpdatePushCredentials(PKPushRegistry registry, PKPushCredentials credentials, string type)
-        {
-            if (credentials != null && credentials.Token != null)
+            try
             {
-                var fullToken = credentials.Token.DebugDescription;
-                var deviceToken = fullToken.Trim('<').Trim('>').Replace(" ", string.Empty);
-                Console.WriteLine("Token is " + deviceToken);
-                await TwilioService.Register(deviceToken);
+                var data = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var filename = Path.Combine(data, String.Format("CallKit_logs.txt"));
+
+                Debug.WriteLine($"{type} {message}");
+                var dt = DateTime.Now.ToString("dd/MM/yyyy hh:mm:ss");
+                var msg = $"{dt}: {type} {message} \n-----\n";
+
+                File.AppendAllText(filename, msg);
             }
+            catch (DirectoryNotFoundException)
+            {
+            }
+             
         }
     }
 }

@@ -11,7 +11,7 @@ namespace CallKitSample.iOS.Twilio
     {
         public static string identity = "sudhir";
         //public static string accessToken = string.Empty;
-        public static string url = "http://96d138363899.ngrok.io/";
+        public static string url = "http://f5aba9130569.ngrok.io/";
 
         static TwilioVoiceHelper helper;
         public TwilioService()
@@ -32,6 +32,16 @@ namespace CallKitSample.iOS.Twilio
 
         public static void Setnotification(PushKit.PKPushPayload payload)
         {
+            if (payload == null)
+            {
+                LoggerService.Log("Info", "TwilioService.cs->SetNotification:: Payload is null");
+                return;
+            }
+            if (helper == null)
+            {
+                LoggerService.Log("Info", "TwilioService.cs->SetNotification:: Helper is null");
+                return;
+            }
             helper.SetNotificationPayload(payload);
         }
 
