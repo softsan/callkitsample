@@ -51,7 +51,7 @@
 		<string>remote-notification</string>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>com.agrisync.agsvoiptest</string>
+	<string>com.mobicefi.callkitsample</string>
 	<key></key>
 	<string></string>
 </dict>
