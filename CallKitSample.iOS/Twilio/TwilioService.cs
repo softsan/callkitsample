@@ -19,7 +19,7 @@ namespace CallKitSample.iOS.Twilio
             helper = new TwilioVoiceHelper();
         }
 
-        public static async Task Register(string deviceToken)
+        public static async Task Register(NSData deviceToken)
         {
             var accessToken = await GetAccessToken();
 
@@ -43,6 +43,12 @@ namespace CallKitSample.iOS.Twilio
                 return;
             }
             helper.SetNotificationPayload(payload);
+        }
+
+        public static void MuteCall(bool isMuted)
+        {
+            if (helper.Call != null)
+                helper.MuteAudio(isMuted);
         }
 
         public static void AnswerIncomingCall()

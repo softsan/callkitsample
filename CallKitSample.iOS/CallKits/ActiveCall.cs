@@ -10,6 +10,7 @@ namespace CallKitSample.CallKits
         private bool isConnecting;
         private bool isConnected;
         private bool isOnhold;
+        private bool isMuted;
         #endregion
 
         #region Computed Properties
@@ -57,6 +58,17 @@ namespace CallKitSample.CallKits
                 isOnhold = value;
             }
         }
+
+        public bool IsMuted
+        {
+            get { return isMuted; }
+            set
+            {
+                isMuted = value;
+                RaiseConnectedChanged();
+            }
+        }
+
         #endregion
 
         #region Constructors
@@ -74,6 +86,16 @@ namespace CallKitSample.CallKits
         #endregion
 
         #region Public Methods
+
+        public void MuteCall(ActiveCallbackDelegate completionHandler)
+        {
+            iOS.Twilio.TwilioService.MuteCall(!IsMuted);
+            //iOS.AppDelegate.Instance.complete();
+            // Simulate the call ending
+            IsMuted = !IsMuted;
+            completionHandler(true);
+        }
+
         public void StartCall(ActiveCallbackDelegate completionHandler)
         {
             iOS.Twilio.TwilioService.ConnectCall(this.Handle);

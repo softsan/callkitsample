@@ -19,8 +19,6 @@ namespace CallKitSample.iOS
         public ActiveCallManager CallManager { get; set; }
         public ProviderDelegate CallProviderDelegate { get; set; }
         public DirectoryDelegate CallDirectoryDelegate { get; set; }
-        string deviceToken;
-
        
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
@@ -28,13 +26,10 @@ namespace CallKitSample.iOS
             
             global::Xamarin.Forms.Forms.Init();
             LoadApplication(new App());
-            //OneSignalNotification();
             RegisterVoip();
             CallManager = new ActiveCallManager();
             CallProviderDelegate = new ProviderDelegate(CallManager);
             CallDirectoryDelegate = new DirectoryDelegate();
-            var audio = TVODefaultAudioDevice.AudioDevice();
-            TwilioVoice.AudioDevice = audio;
             return base.FinishedLaunching(app, options);
         }
         
@@ -43,9 +38,8 @@ namespace CallKitSample.iOS
             if (credentials != null && credentials.Token != null)
             {
                 var fullToken = credentials.Token.DebugDescription;
-                deviceToken = fullToken.Trim('<').Trim('>').Replace(" ", string.Empty);
-                Console.WriteLine("Token is " + deviceToken);
-                await TwilioService.Register(deviceToken);
+                Console.WriteLine("Token is " + fullToken);
+                await TwilioService.Register(credentials.Token);
             }
         }
 
@@ -68,19 +62,12 @@ namespace CallKitSample.iOS
                 var callerid = payload.DictionaryPayload["twi_from"].ToString();
                 LoggerService.Log("Info",$"from: {callerid}");
 
-                // Tried this but it didn't work
-                TwilioVoiceHelper.activeCallUuid = new NSUuid();
-                LoggerService.Log("Info", "CallUUID:" + TwilioVoiceHelper.activeCallUuid);
-
-                SetAudio();
-                CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
-                
                 if (payload != null)
                 {
                     TwilioService.Setnotification(payload);
-                    //TwilioVoiceHelper.activeCallUuid = new NSUuid();
-                    // CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
-
+                    TwilioVoiceHelper.activeCallUuid = new NSUuid();
+                    LoggerService.Log("Info", "CallUUID:" + TwilioVoiceHelper.activeCallUuid);
+                    CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
                 }
                 completion(); 
             }
@@ -112,31 +99,6 @@ namespace CallKitSample.iOS
             PKPushRegistry voipRegistry = new PKPushRegistry(mainQueue);
             voipRegistry.Delegate = this;
             voipRegistry.DesiredPushTypes = new NSSet(new string[] { PushKit.PKPushType.Voip });
-        }
-
-        void SetAudio()
-        {
-            try
-            {
-                NSError error = AVAudioSession.SharedInstance().SetCategory(AVAudioSessionCategory.PlayAndRecord, AVAudioSessionCategoryOptions.DefaultToSpeaker);
-
-                if (error == null)
-                {
-                    if (AVAudioSession.SharedInstance().SetMode(AVAudioSession.ModeVoiceChat, out error))
-                    {
-                        if (AVAudioSession.SharedInstance().OverrideOutputAudioPort(AVAudioSessionPortOverride.Speaker, out error))
-                        {
-                            error = AVAudioSession.SharedInstance().SetActive(true);
-                            if (error != null)
-                                LoggerService.Log("Error", error.Description);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerService.Log("Error", $"Inside SetAudio:: Error:: {ex.Message} {ex.StackTrace}");
-            }
         }
     }
 
