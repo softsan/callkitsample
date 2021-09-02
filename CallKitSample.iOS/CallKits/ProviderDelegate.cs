@@ -3,6 +3,7 @@ using CallKit;
 using CallKitSample.CallKits;
 using CallKitSample.iOS.Twilio;
 using Foundation;
+using Twilio.Voice.iOS;
 using UIKit;
 using Xamarin.Forms.Platform.iOS;
 
@@ -14,6 +15,7 @@ namespace CallKitSample.CallKits
         public ActiveCallManager CallManager { get; set; }
         public CXProviderConfiguration Configuration { get; set; }
         public CXProvider Provider { get; set; }
+        public static TVODefaultAudioDevice _audioDevice;
         #endregion
 
         #region Constructors
@@ -43,6 +45,9 @@ namespace CallKitSample.CallKits
             // Attach this delegate
             Provider.SetDelegate(this, null);
 
+            _audioDevice = TVODefaultAudioDevice.AudioDevice();
+            TwilioVoice.AudioDevice = _audioDevice;
+            _audioDevice.Enabled = false;
         }
         #endregion
 
@@ -137,16 +142,66 @@ namespace CallKitSample.CallKits
                 return;
             }
 
-            // Attempt to answer call
-            call.EndCall((successful) => {
-                // Was the call successfully answered?
+            if (call.isOutgoing == false && call.IsConnected == true)
+            {
+                // Attempt to end call
+                call.EndCall((successful) => {
+                    // Was the call successfully end?
+                    if (successful)
+                    {
+                        // Remove call from manager's queue
+                        CallManager.Calls.Remove(call);
+
+                        // Yes, inform system
+                        action.Fulfill();
+                    }
+                    else
+                    {
+                        // No, inform system
+                        action.Fail();
+                    }
+                });
+            }
+            else
+            {
+                // Attempt to end call
+                call.DeclineCallInvite((successful) => {
+                    // Was the call successfully end?
+                    if (successful)
+                    {
+                        // Remove call from manager's queue
+                        CallManager.Calls.Remove(call);
+
+                        // Yes, inform system
+                        action.Fulfill();
+                    }
+                    else
+                    {
+                        // No, inform system
+                        action.Fail();
+                    }
+                });
+            }
+        }
+
+        public override void PerformSetMutedCallAction(CXProvider provider, CXSetMutedCallAction action)
+        {
+            var call = CallManager.FindCall(action.CallUuid);
+            // Found?
+            if (call == null)
+            {
+                // No, inform system and exit
+                action.Fail();
+                return;
+            }
+            call.MuteCall((successful) => {
+                // Was the call able to be started?
                 if (successful)
                 {
-                    // Remove call from manager's queue
-                    CallManager.Calls.Remove(call);
-
-                    // Yes, inform system
+                    // Yes, inform the system
                     action.Fulfill();
+
+                    // Add call to manager
                 }
                 else
                 {
@@ -154,6 +209,7 @@ namespace CallKitSample.CallKits
                     action.Fail();
                 }
             });
+
         }
 
         public override void PerformSetHeldCallAction(CXProvider provider, CXSetHeldCallAction action)
@@ -183,15 +239,17 @@ namespace CallKitSample.CallKits
 
         public override void DidActivateAudioSession(CXProvider provider, AVFoundation.AVAudioSession audioSession)
         {
+            _audioDevice.Enabled = true;
             //TwilioService.JoinCall();
             // Start the calls audio session here
         }
 
         public override void DidDeactivateAudioSession(CXProvider provider, AVFoundation.AVAudioSession audioSession)
         {
+            _audioDevice.Enabled = false;
             // End the calls audio session and restart any non-call
             // related audio
-            
+
         }
 
         #endregion

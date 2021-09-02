@@ -14,21 +14,16 @@ namespace CallKitSample.iOS.Twilio
         public static string url = "http://f5aba9130569.ngrok.io/";
 
         static TwilioVoiceHelper helper;
-        public TwilioService()
+        static TwilioService()
         {
             helper = new TwilioVoiceHelper();
         }
 
-        public static async Task Register(string deviceToken)
+        public static async Task Register(NSData deviceToken)
         {
             var accessToken = await GetAccessToken();
-
-            helper = new TwilioVoiceHelper();
             helper.Register(accessToken, deviceToken);
-            //return result;
         }
-
-       
 
         public static void Setnotification(PushKit.PKPushPayload payload)
         {
@@ -43,6 +38,12 @@ namespace CallKitSample.iOS.Twilio
                 return;
             }
             helper.SetNotificationPayload(payload);
+        }
+
+        public static void MuteCall(bool isMuted)
+        {
+            if (helper.Call != null)
+                helper.MuteAudio(isMuted);
         }
 
         public static void AnswerIncomingCall()
@@ -67,6 +68,11 @@ namespace CallKitSample.iOS.Twilio
         {
             if(helper.Call!=null)
                 helper.Call.Disconnect();
+        }
+
+        public static void DeclineCallInvite()
+        {
+            helper.RejectCallInvite();
         }
 
         private static async Task<string> GetAccessToken(string to="")
