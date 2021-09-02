@@ -10,8 +10,8 @@ namespace CallKitSample.CallKits
         {
             var ctx = context as CXCallDirectoryExtensionContext;
 
-            ctx.AddIdentificationEntry(18052483024, "AG : Nic");
-            ctx.AddIdentificationEntry(15157714893, "AG : Casey");
+            ctx.AddIdentificationEntry(123456789, "AG : John");
+            ctx.AddIdentificationEntry(531236789, "AG : Michel");
 
             //TODO Populate this
 
