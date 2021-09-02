@@ -133,6 +133,14 @@ namespace CallKitSample.CallKits
             IsConnected = false;
             completionHandler(true);
         }
+        public void DeclineCallInvite(ActiveCallbackDelegate completionHandler)
+        {
+            iOS.Twilio.TwilioService.DeclineCallInvite();
+            //iOS.AppDelegate.Instance.complete();
+            // Simulate the call ending
+            IsMuted = !IsMuted;
+            completionHandler(true);
+        }
         #endregion
 
         #region Events

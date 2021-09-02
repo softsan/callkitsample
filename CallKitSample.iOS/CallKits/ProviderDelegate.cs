@@ -142,23 +142,46 @@ namespace CallKitSample.CallKits
                 return;
             }
 
-            // Attempt to answer call
-            call.EndCall((successful) => {
-                // Was the call successfully answered?
-                if (successful)
-                {
-                    // Remove call from manager's queue
-                    CallManager.Calls.Remove(call);
+            if (call.isOutgoing == false && call.IsConnected == true)
+            {
+                // Attempt to end call
+                call.EndCall((successful) => {
+                    // Was the call successfully end?
+                    if (successful)
+                    {
+                        // Remove call from manager's queue
+                        CallManager.Calls.Remove(call);
 
-                    // Yes, inform system
-                    action.Fulfill();
-                }
-                else
-                {
-                    // No, inform system
-                    action.Fail();
-                }
-            });
+                        // Yes, inform system
+                        action.Fulfill();
+                    }
+                    else
+                    {
+                        // No, inform system
+                        action.Fail();
+                    }
+                });
+            }
+            else
+            {
+                // Attempt to end call
+                call.DeclineCallInvite((successful) => {
+                    // Was the call successfully end?
+                    if (successful)
+                    {
+                        // Remove call from manager's queue
+                        CallManager.Calls.Remove(call);
+
+                        // Yes, inform system
+                        action.Fulfill();
+                    }
+                    else
+                    {
+                        // No, inform system
+                        action.Fail();
+                    }
+                });
+            }
         }
 
         public override void PerformSetMutedCallAction(CXProvider provider, CXSetMutedCallAction action)
