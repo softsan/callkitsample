@@ -51,32 +51,7 @@ namespace CallKitSample.iOS
                 TwilioService.Setnotification(payload);
             }
         }
-
-        [Export("pushRegistry:didReceiveIncomingPushWithPayload:forType:withCompletionHandler:")]
-        public void DidReceiveIncomingPush(PKPushRegistry registry, PKPushPayload payload, string type,Action completion)
-        {
-            try
-            {
-                LoggerService.Log("Info", "My push is coming(Inside Action method!");
-             
-                var callerid = payload.DictionaryPayload["twi_from"].ToString();
-                LoggerService.Log("Info",$"from: {callerid}");
-
-                if (payload != null)
-                {
-                    TwilioService.Setnotification(payload);
-                    TwilioVoiceHelper.activeCallUuid = new NSUuid();
-                    LoggerService.Log("Info", "CallUUID:" + TwilioVoiceHelper.activeCallUuid);
-                    CallProviderDelegate.ReportIncomingCall(TwilioVoiceHelper.activeCallUuid, callerid);
-                }
-                completion(); 
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Info($"Inside DidReceiveIncomingPush:: Error:: {ex.Message} {ex.StackTrace}");
-            }
-        }
-
+        
         public override bool OpenUrl(UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
         {
             // Get handle from url
