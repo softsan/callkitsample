@@ -56,7 +56,8 @@ namespace CallKitSample.iOS.Twilio
             var accessToken = await GetAccessToken(to);
             var args = new Dictionary<string, string>();
             args.Add("to", to);
-
+            AppDelegate.Instance.ActiveCallUUID = new NSUuid();
+            AppDelegate.Instance.CallManager.StartCall(args["to"], AppDelegate.Instance.ActiveCallUUID);
 
             var nsArgs = NSDictionary<NSString, NSString>
                .FromObjectsAndKeys(args.Values.ToArray(), args.Keys.ToArray());
