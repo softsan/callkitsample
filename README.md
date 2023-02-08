@@ -3,6 +3,7 @@ Call kit with pushkit in xamarin with twilio voip
 
 This sample is created to showcase the possibility of making and receiving VOIP calls from Twilio using  Callkit and pushkit.
 
+## Hits
 [![HitCount](https://hits.dwyl.com/softsan/https://githubcom/softsan/callkitsample.svg?style=flat-square)](http://hits.dwyl.com/softsan/https://githubcom/softsan/callkitsample)
 
 If you like this code and repo, you can support me on <br/>
